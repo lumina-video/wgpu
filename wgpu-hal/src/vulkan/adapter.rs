@@ -1017,6 +1017,18 @@ impl PhysicalDeviceProperties {
             if self.supports_extension(ext::image_drm_format_modifier::NAME) {
                 extensions.push(ext::image_drm_format_modifier::NAME);
             }
+
+            // YCbCr conversion extensions for multi-plane video formats (NV12, etc.)
+            // Required for single-FD multi-plane DMABuf import with hardware color conversion
+            if self.supports_extension(khr::sampler_ycbcr_conversion::NAME) {
+                extensions.push(khr::sampler_ycbcr_conversion::NAME);
+            }
+            if self.supports_extension(khr::bind_memory2::NAME) {
+                extensions.push(khr::bind_memory2::NAME);
+            }
+            if self.supports_extension(khr::get_memory_requirements2::NAME) {
+                extensions.push(khr::get_memory_requirements2::NAME);
+            }
         }
 
         // Require `VK_KHR_draw_indirect_count` if the associated feature was requested
