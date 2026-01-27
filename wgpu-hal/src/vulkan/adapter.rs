@@ -1004,6 +1004,21 @@ impl PhysicalDeviceProperties {
             extensions.push(khr::external_memory_win32::NAME);
         }
 
+        // Optional Linux DMABuf external memory extensions for zero-copy video rendering
+        // These enable importing DMABuf file descriptors as Vulkan textures
+        #[cfg(target_os = "linux")]
+        {
+            if self.supports_extension(ext::external_memory_dma_buf::NAME) {
+                extensions.push(ext::external_memory_dma_buf::NAME);
+            }
+            if self.supports_extension(khr::external_memory_fd::NAME) {
+                extensions.push(khr::external_memory_fd::NAME);
+            }
+            if self.supports_extension(ext::image_drm_format_modifier::NAME) {
+                extensions.push(ext::image_drm_format_modifier::NAME);
+            }
+        }
+
         // Require `VK_KHR_draw_indirect_count` if the associated feature was requested
         // Even though Vulkan 1.2 has promoted the extension to core, we must require the extension to avoid
         // large amounts of spaghetti involved with using PhysicalDeviceVulkan12Features.
