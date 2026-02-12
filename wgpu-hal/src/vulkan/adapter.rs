@@ -1,6 +1,6 @@
 use super::conv;
 
-use ash::{amd, ext, google, khr, vk};
+use ash::{amd, android, ext, google, khr, vk};
 use parking_lot::Mutex;
 
 use std::{collections::BTreeMap, ffi::CStr, sync::Arc};
@@ -139,6 +139,12 @@ impl PhysicalDeviceFeatures {
             info = info.push_next(feature);
         }
         if let Some(ref mut feature) = self.robustness2 {
+            info = info.push_next(feature);
+        }
+        if let Some(ref mut feature) = self.multiview {
+            info = info.push_next(feature);
+        }
+        if let Some(ref mut feature) = self.sampler_ycbcr_conversion {
             info = info.push_next(feature);
         }
         if let Some(ref mut feature) = self.astc_hdr {
@@ -376,7 +382,11 @@ impl PhysicalDeviceFeatures {
                 || enabled_extensions.contains(&khr::sampler_ycbcr_conversion::NAME)
             {
                 Some(
-                    vk::PhysicalDeviceSamplerYcbcrConversionFeatures::default(), // .sampler_ycbcr_conversion(requested_features.contains(wgt::Features::TEXTURE_FORMAT_NV12))
+                    vk::PhysicalDeviceSamplerYcbcrConversionFeatures::default()
+                        .sampler_ycbcr_conversion(
+                            requested_features.contains(wgt::Features::TEXTURE_FORMAT_NV12)
+                                || cfg!(target_os = "android"),
+                        ),
                 )
             } else {
                 None
@@ -1002,6 +1012,37 @@ impl PhysicalDeviceProperties {
         // Optional `VK_KHR_external_memory_win32`
         if self.supports_extension(khr::external_memory_win32::NAME) {
             extensions.push(khr::external_memory_win32::NAME);
+        }
+
+        // Optional Android external memory extensions for zero-copy video rendering.
+        // These enable AHardwareBuffer import and sync-fence interop.
+        #[cfg(target_os = "android")]
+        {
+            if self.supports_extension(android::external_memory_android_hardware_buffer::NAME) {
+                extensions.push(android::external_memory_android_hardware_buffer::NAME);
+            }
+            if self.supports_extension(khr::external_memory::NAME) {
+                extensions.push(khr::external_memory::NAME);
+            }
+            if self.supports_extension(khr::dedicated_allocation::NAME) {
+                extensions.push(khr::dedicated_allocation::NAME);
+            }
+            if self.supports_extension(khr::sampler_ycbcr_conversion::NAME) {
+                extensions.push(khr::sampler_ycbcr_conversion::NAME);
+            }
+            if self.supports_extension(khr::external_semaphore::NAME) {
+                extensions.push(khr::external_semaphore::NAME);
+            }
+            if self.supports_extension(khr::external_semaphore_fd::NAME) {
+                extensions.push(khr::external_semaphore_fd::NAME);
+            }
+            // Vulkan 1.0 compatibility for bind-memory2 style paths.
+            if self.supports_extension(khr::bind_memory2::NAME) {
+                extensions.push(khr::bind_memory2::NAME);
+            }
+            if self.supports_extension(khr::get_memory_requirements2::NAME) {
+                extensions.push(khr::get_memory_requirements2::NAME);
+            }
         }
 
         // Optional Linux DMABuf external memory extensions for zero-copy video rendering
