@@ -534,6 +534,8 @@ struct PrivateCapabilities {
     zero_initialize_workgroup_memory: bool,
     image_format_list: bool,
     maximum_samplers: u32,
+    /// True if the physical device reports `samplerYcbcrConversion` as supported.
+    supports_ycbcr_conversion: bool,
 }
 
 bitflags::bitflags!(

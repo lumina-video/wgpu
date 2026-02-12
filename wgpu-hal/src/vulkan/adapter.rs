@@ -385,7 +385,7 @@ impl PhysicalDeviceFeatures {
                     vk::PhysicalDeviceSamplerYcbcrConversionFeatures::default()
                         .sampler_ycbcr_conversion(
                             requested_features.contains(wgt::Features::TEXTURE_FORMAT_NV12)
-                                || cfg!(target_os = "android"),
+                                || private_caps.supports_ycbcr_conversion,
                         ),
                 )
             } else {
@@ -1679,6 +1679,11 @@ impl super::Instance {
                 .properties
                 .limits
                 .max_sampler_allocation_count,
+            supports_ycbcr_conversion: phd_features
+                .sampler_ycbcr_conversion
+                .as_ref()
+                .map(|f| f.sampler_ycbcr_conversion == vk::TRUE)
+                .unwrap_or(false),
         };
         let capabilities = crate::Capabilities {
             limits: phd_capabilities.to_wgpu_limits(),
